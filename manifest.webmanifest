@@ -1,0 +1,9 @@
+{
+  "name": "Panel Colegio",
+  "short_name": "Panel Colegio",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#eef3f1",
+  "theme_color": "#174d3d",
+  "icons": []
+}
