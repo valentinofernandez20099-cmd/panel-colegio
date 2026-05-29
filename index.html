@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#174d3d" />
+    <title>Panel Colegio</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+<link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div id="connectionBadge" class="connection-badge is-empty" aria-live="polite">
+            <span class="connection-dot" aria-hidden="true"></span>
+            <span id="connectionBadgeText">Sin conexion</span>
+          </div>
+        </div>
+        <div class="top-actions">
+          <button id="syncButton" class="icon-button sync-button" type="button" aria-label="Sincronizar">
+            <span class="sync-icon" aria-hidden="true"></span>
+          </button>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <div id="statusHost" hidden>
+          <section id="statusStrip" class="status-strip" aria-live="polite">
+            <div>
+              <span class="status-icon sheets-icon" aria-hidden="true"></span>
+              <span class="label">Estado</span>
+              <strong id="connectionState">Modo prueba local</strong>
+            </div>
+            <div>
+              <span class="status-icon count-icon" aria-hidden="true"></span>
+              <span class="label">Registros</span>
+              <strong id="recordCount">0</strong>
+            </div>
+            <div>
+              <span class="status-icon action-icon" aria-hidden="true"></span>
+              <span class="label">Ultima accion</span>
+              <strong id="lastAction">Sin cambios</strong>
+            </div>
+          </section>
+        </div>
+
+        <section id="homeView" class="view is-active" data-view="home">
+          <div class="section-heading home-heading">
+            <div>
+              <p class="eyebrow">Gestion conectada a Google Sheets</p>
+              <h2>Menu principal</h2>
+              <p>Elige que quieres hacer.</p>
+            </div>
+          </div>
+          <div class="menu-grid">
+            <button class="menu-card" type="button" data-open-view="add">
+              <span class="menu-icon icon-add" aria-hidden="true"></span>
+              <strong>Anadir registro</strong>
+              <small>Crear una entrada nueva y guardarla en Google Sheets.</small>
+            </button>
+            <button class="menu-card" type="button" data-open-view="search">
+              <span class="menu-icon icon-search" aria-hidden="true"></span>
+              <strong>Consultar</strong>
+              <small>Buscar por texto, estado, ubicacion o categoria.</small>
+            </button>
+            <button class="menu-card" type="button" data-open-view="edit">
+              <span class="menu-icon icon-edit" aria-hidden="true"></span>
+              <strong>Editar registro</strong>
+              <small>Busca un registro y modifica cualquiera de sus campos.</small>
+            </button>
+            <button class="menu-card" type="button" data-open-view="quick">
+              <span class="menu-icon icon-actions" aria-hidden="true"></span>
+              <strong>Acciones rapidas</strong>
+              <small>Ver resumen, ultimos registros y avisos de stock.</small>
+            </button>
+            <button class="menu-card" type="button" data-open-view="manage">
+              <span class="menu-icon icon-table" aria-hidden="true"></span>
+              <strong>Gestionar hojas</strong>
+              <small>Crear hojas nuevas y anadir columnas a las existentes.</small>
+            </button>
+          </div>
+        </section>
+
+        <section id="addView" class="view" data-view="add">
+          <div class="view-header">
+            <button class="back-button" type="button" data-open-view="home">Volver</button>
+            <div class="section-heading">
+              <h2>Anadir registro</h2>
+              <p>Guarda un nuevo movimiento en Google Sheets.</p>
+            </div>
+          </div>
+          <div class="view-status-slot"></div>
+          <article class="tool-card">
+            <form id="addForm" class="form-grid">
+              <label class="field">
+                <span>Hoja de destino</span>
+                <select id="sheetSelect" name="sheetName" required>
+                  <option value="">Selecciona una hoja</option>
+                </select>
+              </label>
+              <p id="dynamicFormHint" class="form-hint">Elige una hoja para cargar sus columnas.</p>
+              <div id="dynamicFields" class="dynamic-fields"></div>
+              <button id="uploadButton" class="primary submit-button" type="submit" disabled>Subir</button>
+            </form>
+          </article>
+        </section>
+
+        <section id="searchView" class="view" data-view="search">
+          <div class="view-header">
+            <button class="back-button" type="button" data-open-view="home">Volver</button>
+            <div class="section-heading">
+              <h2>Consultar</h2>
+              <p>Busca registros sin abrir la hoja completa.</p>
+            </div>
+          </div>
+          <div class="view-status-slot"></div>
+          <article class="tool-card">
+            <form id="searchForm" class="stack">
+              <label class="field">
+                <span>Busqueda</span>
+                <input name="query" type="search" placeholder="Elemento, aula, estado..." />
+              </label>
+              <button class="primary" type="submit">Buscar</button>
+            </form>
+            <div class="quick-buttons">
+              <button data-query="Disponible" type="button">Disponibles</button>
+              <button data-query="Prestado" type="button">Prestados</button>
+              <button data-query="Revisar" type="button">Por revisar</button>
+              <button id="lowStockSearchButton" type="button">Stock cerca del minimo</button>
+            </div>
+          </article>
+          <section class="results-area">
+            <div class="section-heading">
+              <h2>Resultados</h2>
+              <p id="resultsHint">Las consultas apareceran aqui sin mostrar la hoja completa.</p>
+            </div>
+            <div id="resultsList" class="results-list"></div>
+          </section>
+        </section>
+
+        <section id="editView" class="view" data-view="edit">
+          <div class="view-header">
+            <button class="back-button" type="button" data-open-view="home">Volver</button>
+            <div class="section-heading">
+              <h2>Editar registro</h2>
+              <p>Busca un registro, abre sus campos y guarda los cambios en Google Sheets.</p>
+            </div>
+          </div>
+          <div class="view-status-slot"></div>
+          <article class="tool-card">
+            <form id="editSearchForm" class="form-grid">
+              <label class="field">
+                <span>Hoja</span>
+                <select id="editSheetSelect" name="sheetName" required>
+                  <option value="">Selecciona una hoja</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Busqueda</span>
+                <input name="query" type="search" placeholder="Texto, codigo, aula..." />
+              </label>
+              <button id="editSearchButton" class="primary submit-button" type="submit">Buscar registros</button>
+            </form>
+          </article>
+          <section class="results-area">
+            <div class="section-heading">
+              <h2>Registros encontrados</h2>
+              <p id="editResultsHint">Selecciona una hoja y busca el registro que quieres editar.</p>
+            </div>
+            <div id="editResultsList" class="results-list"></div>
+          </section>
+          <article id="editFormCard" class="tool-card" hidden>
+            <div class="section-heading">
+              <h2 id="editFormTitle">Editando registro</h2>
+              <p>Modifica los campos necesarios y guarda los cambios.</p>
+            </div>
+            <form id="editRecordForm" class="form-grid">
+              <div id="editDynamicFields" class="dynamic-fields"></div>
+              <button id="saveEditButton" class="primary submit-button" type="submit">Guardar cambios</button>
+            </form>
+          </article>
+        </section>
+
+        <section id="quickView" class="view" data-view="quick">
+          <div class="view-header">
+            <button class="back-button" type="button" data-open-view="home">Volver</button>
+            <div class="section-heading">
+              <h2>Acciones rapidas</h2>
+              <p>Consultas y herramientas frecuentes.</p>
+            </div>
+          </div>
+          <div class="view-status-slot"></div>
+          <article class="tool-card">
+            <div class="stack">
+              <button id="statsButton" type="button">Ver resumen</button>
+              <button id="recentButton" type="button">Ultimos registros</button>
+              <button id="lowStockButton" type="button">Stock cerca del minimo</button>
+              <button id="openSheetButton" type="button">Abrir Google Sheets</button>
+              <button id="clearResultsButton" type="button">Limpiar resultados</button>
+            </div>
+          </article>
+          <section class="results-area">
+            <div class="section-heading">
+              <h2>Resultados</h2>
+              <p id="quickResultsHint">Las respuestas de acciones rapidas apareceran aqui.</p>
+            </div>
+            <div id="quickResultsList" class="results-list"></div>
+          </section>
+        </section>
+
+        <section id="manageView" class="view" data-view="manage">
+          <div class="view-header">
+            <button class="back-button" type="button" data-open-view="home">Volver</button>
+            <div class="section-heading">
+              <h2>Gestionar hojas</h2>
+              <p>Crea hojas nuevas y anade columnas sin abrir Google Sheets.</p>
+            </div>
+          </div>
+          <div class="view-status-slot"></div>
+          <div class="management-grid">
+            <article class="tool-card">
+              <div class="section-heading">
+                <h2>Anadir hoja</h2>
+                <p>Crea una pestana nueva dentro del archivo conectado.</p>
+              </div>
+              <form id="createSheetForm" class="stack">
+                <label class="field">
+                  <span>Nueva hoja</span>
+                  <input name="sheetName" autocomplete="off" placeholder="Ej. PRESTAMOS" required />
+                </label>
+                <button id="createSheetButton" class="primary" type="submit">Crear hoja</button>
+              </form>
+            </article>
+            <article class="tool-card">
+              <div class="section-heading">
+                <h2>Anadir columna</h2>
+                <p>Selecciona una hoja y escribe las columnas nuevas.</p>
+              </div>
+              <form id="addColumnsForm" class="stack">
+                <label class="field">
+                  <span>Hoja</span>
+                  <select id="columnSheetSelect" name="sheetName" required>
+                    <option value="">Selecciona una hoja</option>
+                  </select>
+                </label>
+                <label class="field">
+                  <span>Columnas nuevas</span>
+                  <textarea name="columns" placeholder="Una por linea o separadas por comas" required></textarea>
+                </label>
+                <button id="addColumnsButton" class="primary" type="submit">Anadir columnas</button>
+              </form>
+            </article>
+            <article class="tool-card danger-card">
+              <div class="section-heading">
+                <h2>Borrar hoja</h2>
+                <p>Elimina una pestana completa del archivo conectado.</p>
+              </div>
+              <form id="deleteSheetForm" class="stack">
+                <label class="field">
+                  <span>Hoja</span>
+                  <select id="deleteSheetSelect" name="sheetName" required>
+                    <option value="">Selecciona una hoja</option>
+                  </select>
+                </label>
+                <button id="deleteSheetButton" class="danger-button" type="submit">Borrar hoja</button>
+              </form>
+            </article>
+            <article class="tool-card danger-card">
+              <div class="section-heading">
+                <h2>Borrar columnas</h2>
+                <p>Selecciona una hoja y las columnas que quieres eliminar.</p>
+              </div>
+              <form id="deleteColumnsForm" class="stack">
+                <label class="field">
+                  <span>Hoja</span>
+                  <select id="deleteColumnSheetSelect" name="sheetName" required>
+                    <option value="">Selecciona una hoja</option>
+                  </select>
+                </label>
+                <div>
+                  <span class="field-label">Columnas</span>
+                  <div id="deleteColumnsList" class="checkbox-list"></div>
+                </div>
+                <button id="deleteColumnsButton" class="danger-button" type="submit">Borrar columnas</button>
+              </form>
+            </article>
+          </div>
+          <section class="results-area">
+            <div class="section-heading">
+              <h2>Resultados</h2>
+              <p id="manageResultsHint">Las acciones de hojas apareceran aqui.</p>
+            </div>
+            <div id="manageResultsList" class="results-list"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="recordDialog">
+      <div class="settings-panel record-panel">
+        <div class="section-heading">
+          <h2 id="recordDialogTitle">Detalle del registro</h2>
+          <p>Vista completa de los campos guardados.</p>
+        </div>
+        <div id="recordDetailFields" class="detail-fields"></div>
+        <div class="dialog-actions">
+          <button id="closeRecordDialogButton" type="button">Cerrar</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="confirmDialog">
+      <div class="settings-panel confirm-panel">
+        <div class="section-heading">
+          <h2 id="confirmTitle">Confirmar accion</h2>
+          <p id="confirmMessage">Estas seguro?</p>
+        </div>
+        <div class="dialog-actions">
+          <button id="confirmNoButton" type="button">No</button>
+          <button id="confirmYesButton" class="danger-button" type="button">Si</button>
+        </div>
+      </div>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+      <span id="toastIcon" aria-hidden="true">OK</span>
+      <span id="toastText">Guardado correctamente</span>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
